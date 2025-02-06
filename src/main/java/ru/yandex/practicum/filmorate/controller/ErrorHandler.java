@@ -51,13 +51,6 @@ public class ErrorHandler {
         return errors;
     }
 
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleException(Exception e) {
-        log.error("Internal server error: {}", e.getMessage(), e);
-        return new ErrorResponse("Произошла ошибка на сервере");
-    }
-
     @Getter
     public static class ErrorResponse {
         private final String error;
