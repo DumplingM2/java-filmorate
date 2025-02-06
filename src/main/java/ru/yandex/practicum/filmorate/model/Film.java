@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = "id")
@@ -22,4 +23,9 @@ public class Film {
 
     @Min(value = 1, message = "Продолжительность фильма должна быть положительным числом")
     private int duration;
+
+    private Set<String> genres; // Список жанров фильма
+
+    @NotNull(message = "Рейтинг MPA не может быть null")
+    private String mpa; // Рейтинг возрастного ограничения
 }
