@@ -33,7 +33,7 @@ public class FilmService {
 
     public Film update(Film film) {
         validateFilm(film);
-        if (filmStorage.getFilmById(film.getId()) == null) {
+        if (film.getId() == null || filmStorage.getFilmById(film.getId()) == null) {
             throw new NotFoundException("Фильм с id = " + film.getId() + " не найден");
         }
         return filmStorage.update(film);
@@ -68,7 +68,11 @@ public class FilmService {
     }
 
     public Collection<Film> getPopularFilms(int count) {
-        return filmStorage.getPopularFilms(count);
+        Collection<Film> popularFilms = filmStorage.getPopularFilms(count);
+        if (popularFilms.isEmpty()) {
+            throw new NotFoundException("Популярные фильмы не найдены");
+        }
+        return popularFilms;
     }
 
     public void validateFilm(Film film) {
@@ -83,6 +87,12 @@ public class FilmService {
         }
         if (film.getDuration() <= 0) {
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
+        }
+        if (film.getGenres() == null) {
+            throw new ValidationException("Жанры не могут быть null");
+        }
+        if (film.getMpa() == null) {
+            throw new ValidationException("Рейтинг MPA не может быть null");
         }
     }
 }

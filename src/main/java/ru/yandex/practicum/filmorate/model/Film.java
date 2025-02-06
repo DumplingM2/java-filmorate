@@ -3,7 +3,10 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import jakarta.validation.constraints.*;
+
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = "id")
@@ -22,4 +25,10 @@ public class Film {
 
     @Min(value = 1, message = "Продолжительность фильма должна быть положительным числом")
     private int duration;
+
+    @NotNull(message = "Жанры не могут быть null")
+    private Set<String> genres = new HashSet<>();
+
+    @NotNull(message = "Рейтинг MPA не может быть null")
+    private String mpa = "G"; // Значение по умолчанию
 }
