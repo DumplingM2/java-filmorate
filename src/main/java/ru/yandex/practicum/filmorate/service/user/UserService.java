@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -15,7 +16,7 @@ public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -30,58 +31,47 @@ public class UserService {
 
     public User update(User user) {
         validateUser(user);
-        if (userStorage.getUserById(user.getId()) == null) {
-            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
-        }
+        checkUserExists(user.getId());
         return userStorage.update(user);
     }
 
     public User getUserById(Long id) {
-        User user = userStorage.getUserById(id);
-        if (user == null) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
-        return user;
+        return userStorage.findById(id);
     }
 
     public boolean addFriend(Long userId, Long friendId) {
-        if (userStorage.getUserById(userId) == null) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-        }
-        if (userStorage.getUserById(friendId) == null) {
-            throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
-        }
+        checkUserExists(userId);
+        checkUserExists(friendId);
         return userStorage.addFriend(userId, friendId);
     }
 
     public boolean removeFriend(Long userId, Long friendId) {
-        if (userStorage.getUserById(userId) == null) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-        }
-        if (userStorage.getUserById(friendId) == null) {
-            throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
-        }
+        checkUserExists(userId);
+        checkUserExists(friendId);
         return userStorage.removeFriend(userId, friendId);
     }
 
     public Collection<User> getFriends(Long id) {
-        if (userStorage.getUserById(id) == null) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
+        checkUserExists(id);
         return userStorage.getFriends(id);
     }
 
     public Collection<User> getCommonFriends(Long id, Long otherId) {
-        if (userStorage.getUserById(id) == null) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
-        if (userStorage.getUserById(otherId) == null) {
-            throw new NotFoundException("Пользователь с id = " + otherId + " не найден");
-        }
+        checkUserExists(id);
+        checkUserExists(otherId);
         return userStorage.getCommonFriends(id, otherId);
     }
 
+    private void checkUserExists(Long id) {
+        if (userStorage.findById(id) == null) {
+            throw new NotFoundException("Пользователь с id = " + id + " не найден");
+        }
+    }
+
     public void validateUser(User user) {
+        if (user == null) {
+            throw new ValidationException("Пользователь не может быть null");
+        }
         if (user.getEmail() == null || !user.getEmail().contains("@")) {
             throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
         }
@@ -91,7 +81,7 @@ public class UserService {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
+        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
     }

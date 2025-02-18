@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.beans.factory.annotation.Autowired;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
@@ -27,6 +27,7 @@ class FilmorateApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// Проверяем, что бины действительно поднимаются в контексте
 		assertThat(filmController).isNotNull();
 		assertThat(userController).isNotNull();
 		assertThat(filmService).isNotNull();

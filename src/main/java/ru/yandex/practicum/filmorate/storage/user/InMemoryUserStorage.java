@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
@@ -19,6 +20,11 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
+    public User findById(Long id) {
+        return users.get(id);
+    }
+
+    @Override
     public User create(User user) {
         user.setId(idGenerator.incrementAndGet());
         users.put(user.getId(), user);
@@ -27,13 +33,19 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User update(User user) {
+        if (!users.containsKey(user.getId())) {
+            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден.");
+        }
         users.put(user.getId(), user);
         return user;
     }
 
     @Override
-    public User getUserById(Long id) {
-        return users.get(id);
+    public void delete(Long id) {
+        if (!users.containsKey(id)) {
+            throw new NotFoundException("Пользователь с id = " + id + " не найден.");
+        }
+        users.remove(id);
     }
 
     @Override
@@ -45,8 +57,8 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public boolean removeFriend(Long userId, Long friendId) {
-        friendships.computeIfAbsent(userId, k -> new HashSet<>()).remove(friendId);
-        friendships.computeIfAbsent(friendId, k -> new HashSet<>()).remove(userId);
+        friendships.getOrDefault(userId, new HashSet<>()).remove(friendId);
+        friendships.getOrDefault(friendId, new HashSet<>()).remove(userId);
         return true;
     }
 
@@ -61,9 +73,9 @@ public class InMemoryUserStorage implements UserStorage {
     public Collection<User> getCommonFriends(Long id, Long otherId) {
         Set<Long> friends1 = friendships.getOrDefault(id, new HashSet<>());
         Set<Long> friends2 = friendships.getOrDefault(otherId, new HashSet<>());
-        Set<Long> commonFriends = new HashSet<>(friends1);
-        commonFriends.retainAll(friends2);
-        return commonFriends.stream()
+        Set<Long> common = new HashSet<>(friends1);
+        common.retainAll(friends2);
+        return common.stream()
                 .map(users::get)
                 .collect(Collectors.toList());
     }
