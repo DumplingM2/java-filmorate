@@ -4,10 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 
 import jakarta.validation.Valid;
 import java.util.Collection;
+import java.util.HashSet;
 
 @Slf4j
 @RestController
@@ -29,12 +31,32 @@ public class FilmController {
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Request to create film: {}", film);
+        // Если genres отсутствует, устанавливаем пустой набор:
+        if (film.getGenres() == null) {
+            film.setGenres(new HashSet<>());
+        }
+        // Если mpa отсутствует, устанавливаем значение по умолчанию (id=1, name="G")
+        if (film.getMpa() == null) {
+            MpaRating defaultMpa = new MpaRating();
+            defaultMpa.setId(1L);
+            defaultMpa.setName("G");
+            film.setMpa(defaultMpa);
+        }
         return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
         log.info("Request to update film: {}", film);
+        if (film.getGenres() == null) {
+            film.setGenres(new HashSet<>());
+        }
+        if (film.getMpa() == null) {
+            MpaRating defaultMpa = new MpaRating();
+            defaultMpa.setId(1L);
+            defaultMpa.setName("G");
+            film.setMpa(defaultMpa);
+        }
         return filmService.update(film);
     }
 

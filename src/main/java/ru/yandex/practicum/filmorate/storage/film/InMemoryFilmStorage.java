@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,18 +23,39 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         film.setId(idGenerator.incrementAndGet());
+        // Если нужно, можно установить MPA по умолчанию, если не задано
+        if (film.getMpa() == null) {
+            MpaRating defaultMpa = new MpaRating();
+            defaultMpa.setId(1L);
+            defaultMpa.setName("G");
+            film.setMpa(defaultMpa);
+        }
         films.put(film.getId(), film);
         return film;
     }
 
     @Override
     public Film update(Film film) {
+        if (!films.containsKey(film.getId())) {
+            throw new NotFoundException("Фильм с id = " + film.getId() + " не найден.");
+        }
         films.put(film.getId(), film);
         return film;
     }
 
     @Override
-    public Film getFilmById(Long id) {
+    public void delete(Long id) {
+        if (!films.containsKey(id)) {
+            throw new NotFoundException("Фильм с id = " + id + " не найден.");
+        }
+        films.remove(id);
+    }
+
+    @Override
+    public Film findById(Long id) {
+        if (!films.containsKey(id)) {
+            throw new NotFoundException("Фильм с id = " + id + " не найден.");
+        }
         return films.get(id);
     }
 
@@ -51,7 +74,8 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Collection<Film> getPopularFilms(int count) {
         return films.values().stream()
-                .sorted((f1, f2) -> filmLikes.getOrDefault(f2.getId(), new HashSet<>()).size() - filmLikes.getOrDefault(f1.getId(), new HashSet<>()).size())
+                .sorted((f1, f2) -> filmLikes.getOrDefault(f2.getId(), new HashSet<>()).size()
+                        - filmLikes.getOrDefault(f1.getId(), new HashSet<>()).size())
                 .limit(count)
                 .collect(Collectors.toList());
     }
