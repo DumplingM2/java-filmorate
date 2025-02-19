@@ -31,7 +31,7 @@ public class UserService {
 
     public User update(User user) {
         validateUser(user);
-        checkUserExists(user.getId());
+        validateUserExists(user.getId());
         return userStorage.update(user);
     }
 
@@ -40,29 +40,30 @@ public class UserService {
     }
 
     public boolean addFriend(Long userId, Long friendId) {
-        checkUserExists(userId);
-        checkUserExists(friendId);
+        validateUserExists(userId);
+        validateUserExists(friendId);
         return userStorage.addFriend(userId, friendId);
     }
 
     public boolean removeFriend(Long userId, Long friendId) {
-        checkUserExists(userId);
-        checkUserExists(friendId);
+        validateUserExists(userId);
+        validateUserExists(friendId);
         return userStorage.removeFriend(userId, friendId);
     }
 
     public Collection<User> getFriends(Long id) {
-        checkUserExists(id);
+        validateUserExists(id);
         return userStorage.getFriends(id);
     }
 
     public Collection<User> getCommonFriends(Long id, Long otherId) {
-        checkUserExists(id);
-        checkUserExists(otherId);
+        validateUserExists(id);
+        validateUserExists(otherId);
         return userStorage.getCommonFriends(id, otherId);
     }
 
-    private void checkUserExists(Long id) {
+    // Новый публичный метод проверки существования пользователя
+    public void validateUserExists(Long id) {
         if (userStorage.findById(id) == null) {
             throw new NotFoundException("Пользователь с id = " + id + " не найден");
         }

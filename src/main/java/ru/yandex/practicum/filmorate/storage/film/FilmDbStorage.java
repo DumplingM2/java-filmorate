@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -154,14 +155,27 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void updateFilmGenres(Film film) {
+        // Удаляем старые связи
         String deleteSql = "DELETE FROM film_genres WHERE film_id = ?";
         jdbcTemplate.update(deleteSql, film.getId());
 
-        if (film.getGenres() != null) {
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             String insertSql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
-            for (Genre genre : film.getGenres()) {
-                jdbcTemplate.update(insertSql, film.getId(), genre.getId());
-            }
+            // Преобразуем набор жанров в список
+            final ArrayList<Genre> genreList = new ArrayList<>(film.getGenres());
+
+            jdbcTemplate.batchUpdate(insertSql, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setLong(1, film.getId());
+                    ps.setLong(2, genreList.get(i).getId());
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return genreList.size();
+                }
+            });
         }
     }
 }

@@ -6,8 +6,10 @@ import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository("genreDbStorage")
 public class GenreDbStorage {
@@ -32,16 +34,29 @@ public class GenreDbStorage {
     public Optional<Genre> findById(Long id) {
         String sql = "SELECT * FROM genres WHERE id = ?";
         List<Genre> list = jdbcTemplate.query(sql, (rs, rowNum) -> makeGenre(rs), id);
-        return list.isEmpty() ? Optional.empty() : Optional.of(list.getFirst());
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
 
     /**
-     * Пример, если хотите добавить метод create (опционально).
+     * Получить список жанров по списку идентификаторов.
+     */
+    public List<Genre> findByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        String placeholders = ids.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(","));
+        String sql = "SELECT * FROM genres WHERE id IN (" + placeholders + ")";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeGenre(rs), ids.toArray());
+    }
+
+    /**
+     * Пример метода create (опционально).
      */
     public Genre create(Genre genre) {
         String sql = "INSERT INTO genres (name) VALUES (?)";
         jdbcTemplate.update(sql, genre.getName());
-        // Если нужен автоинкремент — можно воспользоваться KeyHolder, как в UserDbStorage
         return genre;
     }
 
